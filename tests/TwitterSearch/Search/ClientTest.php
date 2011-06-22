@@ -34,25 +34,74 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @todo Implement testGetTweets().
-     */
-    public function testGetTweets()
+    public function testGetTweetsCorrectUri()
     {
         $mockHttp = m::mock('\Zend_Http_Client');
 
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=microsoft')
+                 ->once();
+
+        $mockHttp->shouldReceive('request')
+                ->once();
+
         $client = new Client($mockHttp);
 
-        $tweets = $client->getTweets('microsoft', 2);
+        $tweets = $client->getTweets(array('microsoft'), 2);
 
-        $expectedTweets = array(array('text' => 'test'));
-
-        $this->assertEquals($expectedTweets, $tweets);
     }
 
-    public function testGetTweetsMultiplePages()
+    public function testGetTweetsCorrectUriEncodingOneParam()
     {
-        $this->markTestIncomplete();
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=%3A%29')
+                 ->between(1,1);
+
+        $mockHttp->shouldReceive('request')
+                 ->once();
+
+        $client = new Client($mockHttp);
+
+        $tweets = $client->getTweets(array(':)'), 2);
+
+    }
+
+    public function testGetTweetsCorrectUriEncodingTwoParam()
+    {
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29')
+                 ->between(1,1);
+
+        $mockHttp->shouldReceive('request')
+                 ->once();
+
+        $client = new Client($mockHttp);
+
+        $tweets = $client->getTweets(array('microsoft', ':)'), 2);
+
+    }
+
+    public function testGetTweetsCorrectUriWithAdditionalSettings()
+    {
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29&lang=en&result_type=mixed')
+                 ->between(1,1);
+
+        $mockHttp->shouldReceive('request')
+                 ->once();
+
+        $client = new Client($mockHttp);
+
+        $client->setLang('en');
+        $client->setResultType(Client::RESULT_TYPE_MIXED);
+
+        $tweets = $client->getTweets(array('microsoft', ':)'), 2);
     }
 
 }

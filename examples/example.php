@@ -7,6 +7,6 @@ $autoloader = new TwitterSearch\Autoloader(null, __DIR__ . '/../lib');
 
 $autoloader->register();
 
-new Zend_Http_Client();
+echo urlencode(':)');
 
 ?>
