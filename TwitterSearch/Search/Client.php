@@ -49,6 +49,13 @@ class Client
     const RESULT_TYPE_MIXED = 'mixed';
 
     /**
+     * Constant defines the maximum results per page.
+     *
+     * @var integer
+     */
+    const RPP = 100;
+
+    /**
      * Constant defines the 'recent' result type. (Only recent tweets).
      *
      * @var string
@@ -107,9 +114,18 @@ class Client
      */
     public function getTweets(array $keyword, $amount = 10)
     {
-        $url = $this->constructUrl($keyword, 1);
 
-        $this->queryTwitter($url);
+        // Pages required
+        $pagesReq = $amount / self::RPP;
+
+        for($page=1; $page <= $pagesReq; $page++)
+        {
+            $url = $this->constructUrl($keyword, $page);
+
+            $this->queryTwitter($url);
+        }
+
+
     }
 
     /**
@@ -123,7 +139,10 @@ class Client
     protected function constructUrl(array $keyword, $page)
     {
         $queryStringStart = '?';
+
         $params['q'] = $keyword;
+        $params['page'] = $page;
+        $params['rpp'] = self::RPP;
 
         if(isset($this->lang))
         {

@@ -104,6 +104,38 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $tweets = $client->getTweets(array('microsoft', ':)'), 2);
     }
 
+    public function sampleSizeProvider()
+    {
+        return array(
+            // Provides the desired sample number, the expected number of 
+            // requests and a regex to verify urls set.
+            array(1, 1, '/http:\/\/search.twitter.com\/search.json\?q=microsoft&page=[1]&rpp=100/'),
+            array(101, 2, '/http:\/\/search.twitter.com\/search.json\?q=microsoft&page=[1-2]&rpp=100/'),
+            array(201, 3, '/http:\/\/search.twitter.com\/search.json\?q=microsoft&page=[1-3]&rpp=100/'),
+            array(1500, 15, '/http:\/\/search.twitter.com\/search.json\?q=microsoft&page=([1-9]|1[0-5])&rpp=100/')
+        );
+    }
+
+    /**
+     *@dataProvider sampleSizeProvider
+     */
+    public function testGetCorrectSampleSize($sampleSize, $requestNumber, $urlReg)
+    {
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')                 
+                 ->times($requestNumber)
+                 ->with($urlReg);
+                //->with(m::any());
+
+        $mockHttp->shouldReceive('request')
+                 ->times($requestNumber);
+
+        $client = new Client($mockHttp);
+
+        $tweets = $client->getTweets(array('microsoft'), $sampleSize);
+    }
+
 }
 
 ?>
