@@ -39,11 +39,20 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $mockHttp = m::mock('\Zend_Http_Client');
 
         $mockHttp->shouldReceive('setUri')
-                 ->with('http://search.twitter.com/search.json?q=microsoft')
+                 ->with('http://search.twitter.com/search.json?q=microsoft&page=1&rpp=100')
                  ->once();
 
         $mockHttp->shouldReceive('request')
                 ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->once()
+                 ->andReturn($mockHttpResp);
 
         $client = new Client($mockHttp);
 
@@ -56,11 +65,20 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $mockHttp = m::mock('\Zend_Http_Client');
 
         $mockHttp->shouldReceive('setUri')
-                 ->with('http://search.twitter.com/search.json?q=%3A%29')
+                 ->with('http://search.twitter.com/search.json?q=%3A%29&page=1&rpp=100')
                  ->between(1,1);
 
         $mockHttp->shouldReceive('request')
                  ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->once()
+                 ->andReturn($mockHttpResp);
 
         $client = new Client($mockHttp);
 
@@ -73,11 +91,20 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $mockHttp = m::mock('\Zend_Http_Client');
 
         $mockHttp->shouldReceive('setUri')
-                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29')
+                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29&page=1&rpp=100')
                  ->between(1,1);
 
         $mockHttp->shouldReceive('request')
                  ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->once()
+                 ->andReturn($mockHttpResp);
 
         $client = new Client($mockHttp);
 
@@ -90,11 +117,20 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $mockHttp = m::mock('\Zend_Http_Client');
 
         $mockHttp->shouldReceive('setUri')
-                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29&lang=en&result_type=mixed')
+                 ->with('http://search.twitter.com/search.json?q=microsoft+%3A%29&page=1&rpp=100&lang=en&result_type=mixed')
                  ->between(1,1);
 
         $mockHttp->shouldReceive('request')
                  ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->once()
+                 ->andReturn($mockHttpResp);
 
         $client = new Client($mockHttp);
 
@@ -119,21 +155,66 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     /**
      *@dataProvider sampleSizeProvider
      */
-    public function testGetCorrectSampleSize($sampleSize, $requestNumber, $urlReg)
+    public function testGetTweetsCorrectSampleSize($sampleSize, $requestNumber, $urlReg)
     {
         $mockHttp = m::mock('\Zend_Http_Client');
 
         $mockHttp->shouldReceive('setUri')                 
                  ->times($requestNumber)
                  ->with($urlReg);
-                //->with(m::any());
 
         $mockHttp->shouldReceive('request')
                  ->times($requestNumber);
 
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->times($requestNumber)
+                 ->andReturn($mockHttpResp);
+
         $client = new Client($mockHttp);
 
         $tweets = $client->getTweets(array('microsoft'), $sampleSize);
+
+        $tCount = count($tweets);
+
+        $this->assertEquals($sampleSize, $tCount);
+    }
+
+    public function testGetTweetsReturnsCorrectArrayStructure(){
+        
+        
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=microsoft&page=1&rpp=100')
+                 ->once();
+
+        $mockHttp->shouldReceive('request')
+                ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->once()
+                 ->andReturn($mockHttpResp);
+
+        $client = new Client($mockHttp);
+
+        $tweets = $client->getTweets(array('microsoft'), 1);
+
+        $tweet = array_shift($tweets);
+
+        $expectedKeys = array('username', 'tweetText', 'date');
+        $tweetKeys = array_keys($tweet);
+
+        $this->assertEquals($expectedKeys, $tweetKeys);
     }
 
 }

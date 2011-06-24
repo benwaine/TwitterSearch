@@ -33,7 +33,6 @@ class Client
      */
     private $resultType;
 
-
     /**
      * The uri of the search endpoint provided by Twitter.
      *
@@ -115,16 +114,28 @@ class Client
     public function getTweets(array $keyword, $amount = 10)
     {
 
+        $tweets = array();
+
         // Pages required
-        $pagesReq = $amount / self::RPP;
+        $pagesReq = ceil($amount / self::RPP);
 
         for($page=1; $page <= $pagesReq; $page++)
         {
+            echo "$page ";
             $url = $this->constructUrl($keyword, $page);
 
-            $this->queryTwitter($url);
+            $pageTweets = $this->queryTwitter($url);
+           
+            $tweets = array_merge($tweets, $pageTweets);
         }
 
+        // Ensure the number of tweets requested matches the number returned
+        if(count($tweets) > $amount)
+        {
+            $tweets = array_slice($tweets, 0, $amount);
+        }
+
+        return $tweets;
 
     }
 
@@ -182,7 +193,7 @@ class Client
         $queryString = \substr($queryString, 0, -1);
 
         $url = self::TWITTER_SEARCH_ENDPOINT . $queryStringStart . $queryString;
-
+        
         return $url;
     }
 
@@ -197,7 +208,11 @@ class Client
     {
         $this->client->setUri($url);
 
-        $response = $this->client->request();
+        $this->client->request();
+
+        $result = $this->handleQueryResult($this->client->getLastResponse());
+
+        return $result;
     }
 
     /**
@@ -209,7 +224,39 @@ class Client
      */
     protected function handleQueryResult(HttpResp $httpResp)
     {
-        
+        $body = $httpResp->getBody();
+
+        $tweetArray = \json_decode($body, true);
+
+
+        if(!isset($tweetArray['results']))
+        {
+            return false;
+        }
+
+        $returnArray = array();
+
+        foreach($tweetArray['results'] as $tweet)
+        {
+            $returnArray[] = $this->handleRawTweet($tweet);
+        }
+
+        return $returnArray;
+    }
+
+    private function handleRawTweet(array $tweet)
+    {
+        $outTweet = array(
+            'username' => '',
+            'tweetText' => '',
+            'date' => ''
+        );
+
+        $outTweet['username']  = (isset($tweet['from_user'])) ? $tweet['from_user'] : '';
+        $outTweet['tweetText'] = (isset($tweet['text'])) ? $tweet['text'] : '';
+        $outTweet['date']      = (isset($tweet['created_at'])) ? $tweet['created_at'] : '';
+
+        return $outTweet;
     }
 
 }
