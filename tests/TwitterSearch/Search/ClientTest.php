@@ -217,6 +217,31 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedKeys, $tweetKeys);
     }
 
+    public function testGetTweetsBackOff()
+    {
+        $mockHttp = m::mock('\Zend_Http_Client');
+
+        $mockHttp->shouldReceive('setUri')
+                 ->with('http://search.twitter.com/search.json?q=microsoft&page=1&rpp=100')
+                 ->once();
+
+        $mockHttp->shouldReceive('request')
+                ->once();
+
+        $mockHttpResp = m::mock("\Zend_Http_Response");
+        $mockHttpResp->shouldReceive('getBody')
+                     ->andReturn(Helper\TweetProvider::getFixture('ClientTest-BasicTweets'));
+
+        $mockHttp->shouldReceive('getLastResponse')
+                 ->withNoArgs()
+                 ->andReturn($mockHttpResp)
+                 ->times(5);
+
+        $client = new Client($mockHttp);
+
+        $tweets = $client->getTweets(array('microsoft'), 100);
+    }
+
 }
 
 ?>

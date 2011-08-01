@@ -1,0 +1,21 @@
+TwitterSearch is a component written in PHP making use of the Twitter's Search API.
+
+It allows the user to enter an array of query terms and request a number of tweets back.
+
+The component ships with it's own autloader and is fully unit tested.
+
+Requirements:
+
+PHP >= 5.3
+
+Mockery - A PHP Mock object framework (required when running unit tests)
+
+Zend_Http (included) - Used to make HTTP requests to Twitter
+
+Usage:
+
+
+
+TODO
+
+Add logic around response handling from Twitter.
